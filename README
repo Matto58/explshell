@@ -1,0 +1,17 @@
+expl
+----
+an experimental shell written in python. tested with python 3.13. the name is
+an inside joke, refers to the exploding head emoji on discord being typeable by
+typing :expl and pressing tab
+
+command list: [required] (optional)
+- about
+  - shows info about the shell (for now just the version and name)
+- clear
+  - clears the console
+- echo [text...]
+  - prints whatever was inputted
+- err [error code] (text...)
+  - sets the error code of the command and prints the specified error
+- exit
+  - exits expl
