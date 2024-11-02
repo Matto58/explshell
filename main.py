@@ -45,6 +45,27 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
         if not os.path.isdir(newPath):
             return (-1, "path not found: " + str(newPath))
         path = str(newPath.expanduser().resolve())
+    elif ln[0] == "ls":
+        thisPath = pathlib.Path(path) if len(ln) < 2 else pathlib.Path(" ".join(ln[1:]))
+        if not os.path.isdir(thisPath):
+            return (-1, "not a directory: " + str(newPath))
+        
+        listing = os.listdir(thisPath)
+        files = []
+        dirs = []
+        for p in listing:
+            if os.path.isfile(p):
+                files.append(p)
+            elif os.path.isdir(p):
+                dirs.append(p)
+            else:
+                return (-1, "okay why the hell is " + p + " not a dir nor a file")
+        files = sorted(files)
+        dirs = sorted(dirs)
+
+        print("dirs: " + ", ".join(dirs))
+        print("files: " + ", ".join(files))
+
     else:
         return (-1, "unknown command: " + ln[0])
     return (0, None)

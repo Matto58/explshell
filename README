@@ -7,6 +7,8 @@ typing :expl and pressing tab
 command list: [required] (optional)
 - about
   - shows info about the shell (for now just the version and name)
+- cd (path...)
+  - changes directory or displays the current one if no path is specified
 - clear
   - clears the console
 - echo [text...]
@@ -15,3 +17,5 @@ command list: [required] (optional)
   - sets the error code of the command and prints the specified error
 - exit
   - exits expl
+- ls (path...)
+  - lists the contents of the specified directory or the current one
