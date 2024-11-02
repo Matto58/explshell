@@ -21,7 +21,7 @@ defaultConfig: dict[str, dict[str]] = {
 
 def cmd(ln: list[str]) -> tuple[int, str | None]:
     if ln[0] == "about":
-        print(Fore.GREEN + "expl version 0.10" + Style.RESET_ALL)
+        print(Fore.LIGHTGREEN_EX + "expl version 0.10" + Style.RESET_ALL)
     elif ln[0] == "clear":
         # https://stackoverflow.com/a/50560686
         print("\033[H\033[J", end="")
@@ -67,7 +67,7 @@ def main():
             )
         if getConfig(config, "prompt", "showUser"):
             print(
-                Fore.YELLOW + getuser() + "@" + gethostname(),
+                Fore.LIGHTYELLOW_EX + getuser() + "@" + gethostname(),
                 end = Style.RESET_ALL + " "
             )
         if getConfig(config, "prompt", "showPath"):
