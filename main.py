@@ -2,7 +2,7 @@
 # the main file for the expl shell
 # (c) 2024 Matto58, licensed under the MIT license
 
-import yaml, os
+import yaml, os, pathlib
 from colorama import Fore, Back, Style
 from getpass import getuser
 from socket import gethostname
@@ -18,6 +18,7 @@ defaultConfig: dict[str, dict[str]] = {
         "showAboutOnStart": True
     }
 }
+path = os.getcwd()
 
 def cmd(ln: list[str]) -> tuple[int, str | None]:
     if ln[0] == "about":
@@ -34,6 +35,16 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
             return (int(ln[1]), " ".join(ln[2:]) if len(ln) > 2 else None)
         except ValueError:
             return (-1, "invalid error code")
+    elif ln[0] == "cd":
+        global path
+        if len(ln) < 2:
+            return (0, path)
+        pathL = pathlib.Path(path)
+        pathR = pathlib.Path(" ".join(ln[1:]))
+        newPath = pathlib.Path(pathL / pathR)
+        if not os.path.isdir(newPath):
+            return (-1, "path not found: " + str(newPath))
+        path = str(newPath.expanduser().resolve())
     else:
         return (-1, "unknown command: " + ln[0])
     return (0, None)
@@ -72,7 +83,7 @@ def main():
             )
         if getConfig(config, "prompt", "showPath"):
             print(
-                Style.BRIGHT + Fore.BLUE + "/todo/add/path",
+                Style.BRIGHT + Fore.BLUE + path,
                 end = Style.RESET_ALL + " "
             )
 
