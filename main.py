@@ -26,8 +26,9 @@ def lsFileSize(n: int):
     n2 = float(n)
     for prefix in prefixes:
         if n2 / 1000 < 1:
-            return str(round(n2, 2)) + prefix
+            return (str(round(n2, 2)) + prefix) if prefix != " " else str(int(n2)) # no prefix should show no decimals
         n2 /= 1000
+    return str(round(n2)) + prefix # it's gotta eventually stop
 
 def cmd(ln: list[str]) -> tuple[int, str | None]:
     if ln[0] == "about":
@@ -59,38 +60,26 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
         if not os.path.isdir(thisPath):
             return (-1, "not a directory: " + str(newPath))
         
-        listing = os.listdir(thisPath)
-        files = []
-        dirs = []
-        for p in listing:
-            if os.path.isfile(p):
-                files.append(p)
-            elif os.path.isdir(p):
-                dirs.append(p)
-            else:
-                return (-1, "okay why the hell is " + p + " not a dir nor a file")
-        files = sorted(files)
-        dirs = sorted(dirs)
+        listing = sorted(os.listdir(thisPath))
         # header
-        print(Style.BRIGHT + Back.WHITE + Fore.BLACK + "Type\tSize\tLast modified\tName")
+        print(Back.LIGHTWHITE_EX + Fore.BLACK + "Type\tSize\tLast modified\tName")
         print(Style.RESET_ALL, end = "")
 
-        # TODO: refactor
-        for d in dirs:
-            print(Fore.LIGHTCYAN_EX + "Dir\t", end=Style.RESET_ALL) # type
-            print("\t", end="") # skip file size for directory
-            lastmod = datetime.fromtimestamp(os.path.getmtime(d))
-            print(f"D{(lastmod.year % 100):02}{lastmod.month:02}{lastmod.day:02}", end="\t") # last modified (date)
-            print(f"T{lastmod.hour:02}{lastmod.minute:02}{lastmod.second:02}", end="\t") # last modified (time)
-            print(Fore.LIGHTRED_EX + d + Style.RESET_ALL)
-        for f in files:
-            print(Fore.LIGHTRED_EX + "File\t", end=Style.RESET_ALL) # type
-            size = os.path.getsize(f)
-            print(lsFileSize(size), end="\t") # file size
-            lastmod = datetime.fromtimestamp(os.path.getmtime(f))
-            print(f"D{(lastmod.year % 100):02}{lastmod.month:02}{lastmod.day:02}", end="\t") # last modified (date)
-            print(f"T{lastmod.hour:02}{lastmod.minute:02}{lastmod.second:02}", end="\t") # last modified (time)
-            print(Fore.LIGHTRED_EX + f + Style.RESET_ALL)
+        for p in listing:
+            # type
+            d = os.path.isdir(p)
+            print((
+                Fore.LIGHTCYAN_EX + "Dir" if d
+                else Fore.LIGHTRED_EX + "File") + "\t", end=Style.RESET_ALL)
+            # size
+            size = os.path.getsize(p)
+            print(lsFileSize(size), end="\t")
+            # last modified
+            lastmod = datetime.fromtimestamp(os.path.getmtime(p))
+            print(f"D{(lastmod.year % 100):02}{lastmod.month:02}{lastmod.day:02}", end="\t") # date YYMMDD
+            print(f"T{lastmod.hour:02}{lastmod.minute:02}{lastmod.second:02}", end="\t") # time HHMMSS
+            # name
+            print((Fore.LIGHTCYAN_EX if d else Fore.LIGHTRED_EX) + p + Style.RESET_ALL)
 
     else:
         return (-1, "unknown command: " + ln[0])
@@ -131,10 +120,10 @@ def main():
         if getConfig(config, "prompt", "showPath"):
             print(
                 Style.BRIGHT + Fore.BLUE + path,
-                end = Style.RESET_ALL + " "
+                end = Style.RESET_ALL
             )
 
-        line = input(getConfig(config, "prompt", "separator") + " ")
+        line = input(getConfig(config, "prompt", "separator"))
         ln = line.strip().split(" ")
         if len(ln) == 0: continue
         if ln[0] == "exit": return
