@@ -6,6 +6,7 @@ import yaml, os, pathlib
 from colorama import Fore, Back, Style
 from getpass import getuser
 from socket import gethostname
+from datetime import datetime
 
 defaultConfig: dict[str, dict[str]] = {
     "prompt": {
@@ -19,6 +20,14 @@ defaultConfig: dict[str, dict[str]] = {
     }
 }
 path = os.getcwd()
+
+def lsFileSize(n: int):
+    prefixes = list(" KMGT") # that ought to be enough i suppose
+    n2 = float(n)
+    for prefix in prefixes:
+        if n2 / 1000 < 1:
+            return str(round(n2, 2)) + prefix
+        n2 /= 1000
 
 def cmd(ln: list[str]) -> tuple[int, str | None]:
     if ln[0] == "about":
@@ -62,9 +71,26 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
                 return (-1, "okay why the hell is " + p + " not a dir nor a file")
         files = sorted(files)
         dirs = sorted(dirs)
+        # header
+        print(Style.BRIGHT + Back.WHITE + Fore.BLACK + "Type\tSize\tLast modified\tName")
+        print(Style.RESET_ALL, end = "")
 
-        print("dirs: " + ", ".join(dirs))
-        print("files: " + ", ".join(files))
+        # TODO: refactor
+        for d in dirs:
+            print(Fore.LIGHTCYAN_EX + "Dir\t", end=Style.RESET_ALL) # type
+            print("\t", end="") # skip file size for directory
+            lastmod = datetime.fromtimestamp(os.path.getmtime(d))
+            print(f"D{(lastmod.year % 100):02}{lastmod.month:02}{lastmod.day:02}", end="\t") # last modified (date)
+            print(f"T{lastmod.hour:02}{lastmod.minute:02}{lastmod.second:02}", end="\t") # last modified (time)
+            print(Fore.LIGHTRED_EX + d + Style.RESET_ALL)
+        for f in files:
+            print(Fore.LIGHTRED_EX + "File\t", end=Style.RESET_ALL) # type
+            size = os.path.getsize(f)
+            print(lsFileSize(size), end="\t") # file size
+            lastmod = datetime.fromtimestamp(os.path.getmtime(f))
+            print(f"D{(lastmod.year % 100):02}{lastmod.month:02}{lastmod.day:02}", end="\t") # last modified (date)
+            print(f"T{lastmod.hour:02}{lastmod.minute:02}{lastmod.second:02}", end="\t") # last modified (time)
+            print(Fore.LIGHTRED_EX + f + Style.RESET_ALL)
 
     else:
         return (-1, "unknown command: " + ln[0])
