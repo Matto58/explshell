@@ -2,7 +2,7 @@
 # the main file for the expl shell
 # (c) 2024 Matto58, licensed under the MIT license
 
-import yaml, os
+import yaml, os, subprocess, sys
 from colorama import Fore, Back, Style
 from getpass import getuser
 from socket import gethostname
@@ -48,7 +48,7 @@ def aboutPrint(s, config={}, end="\n"):
 
 def cmd(ln: list[str], config) -> tuple[int, str | None]:
     if ln[0] == "about":
-        aboutPrint("expl version 0.11", config)
+        aboutPrint("expl version 0.20", config)
         if ln.__contains__("--primitive"): return (0, None)
         aboutPrint("(c) 2024 Matto58, licensed under the MIT license", config)
         aboutPrint("report issues/contribute at https://github.com/Matto58/explshell", config)
@@ -107,7 +107,11 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
             print((dirColor if d else flColor) + p + Style.RESET_ALL)
 
     else:
-        return (-1, "unknown command: " + ln[0])
+        try:
+            process = subprocess.run(ln, stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr)
+            return (process.returncode, None)
+        except FileNotFoundError:
+            return (-1, "unknown command: " + ln[0])
     return (0, None)
 
 def loadConfig():
