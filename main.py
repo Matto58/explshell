@@ -29,6 +29,7 @@ defaultConfig: dict[str, dict[str]] = {
         "path": "BLUE",
     }
 }
+CONFIG_PATH = Path("~/.expl/config.yaml").expanduser()
 path = os.getcwd()
 
 def lsFileSize(n: int):
@@ -115,13 +116,15 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
     return (0, None)
 
 def loadConfig():
-    if not os.path.exists("config.yaml"):
-        hconfig = open("config.yaml", "w")
+    if not os.path.exists(CONFIG_PATH.parent):
+        os.mkdir(CONFIG_PATH.parent)
+    if not os.path.exists(CONFIG_PATH):
+        hconfig = open(CONFIG_PATH, "w")
         yaml.dump(defaultConfig, hconfig)
         hconfig.close()
         return defaultConfig
     
-    hconfig = open("config.yaml")
+    hconfig = open(CONFIG_PATH)
     config = yaml.load(hconfig, yaml.Loader)
     hconfig.close()
     return config
