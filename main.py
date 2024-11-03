@@ -32,9 +32,19 @@ def lsFileSize(n: int):
         n2 /= 1000
     return str(round(n2)) + prefix # it's gotta eventually stop
 
+# typing Back.LIGHTGREEN_EX + Fore.BLACK + <string> + Style.RESET_ALL over and
+# over eventually bores you, doesn't it?
+def aboutPrint(s, end="\n"):
+    print(Back.LIGHTGREEN_EX + Fore.BLACK + s + Style.RESET_ALL, end=end)
+
 def cmd(ln: list[str]) -> tuple[int, str | None]:
     if ln[0] == "about":
-        print(Fore.LIGHTGREEN_EX + "expl version 0.10" + Style.RESET_ALL)
+        aboutPrint("expl version 0.11")
+        if ln.__contains__("--primitive"): return (0, None)
+        aboutPrint("(c) 2024 Matto58, licensed under the MIT license")
+        aboutPrint("report issues/contribute at https://github.com/Matto58/explshell")
+        aboutPrint("thanks for using my silly little shell! <3")
+
     elif ln[0] == "clear":
         # https://stackoverflow.com/a/50560686
         print("\033[H\033[J", end="")
@@ -50,7 +60,8 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
     elif ln[0] == "cd":
         global path
         if len(ln) < 2:
-            return (0, path)
+            print(path)
+            return (0, None)
         pathL = Path(path)
         pathR = Path(" ".join(ln[1:]))
         newPath = Path(pathL / pathR)
@@ -104,7 +115,7 @@ def getConfig(config, category, key):
 
 def main():
     config = loadConfig()
-    if getConfig(config, "misc", "showAboutOnStart"): cmd(["about"])
+    if getConfig(config, "misc", "showAboutOnStart"): cmd(["about", "--primitive"])
     exitCode = None
     while True:
         if getConfig(config, "prompt", "showPrevCmdExitCode"):
