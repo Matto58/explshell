@@ -2,11 +2,13 @@
 # the main file for the expl shell
 # (c) 2024 Matto58, licensed under the MIT license
 
-import yaml, os, pathlib
+import yaml, os
 from colorama import Fore, Back, Style
 from getpass import getuser
 from socket import gethostname
 from datetime import datetime
+from pathlib import Path
+from os.path import isdir, getsize, getmtime
 
 defaultConfig: dict[str, dict[str]] = {
     "prompt": {
@@ -49,15 +51,15 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
         global path
         if len(ln) < 2:
             return (0, path)
-        pathL = pathlib.Path(path)
-        pathR = pathlib.Path(" ".join(ln[1:]))
-        newPath = pathlib.Path(pathL / pathR)
-        if not os.path.isdir(newPath):
+        pathL = Path(path)
+        pathR = Path(" ".join(ln[1:]))
+        newPath = Path(pathL / pathR)
+        if not isdir(newPath):
             return (-1, "path not found: " + str(newPath))
         path = str(newPath.expanduser().resolve())
     elif ln[0] == "ls":
-        thisPath = pathlib.Path(path) if len(ln) < 2 else pathlib.Path(" ".join(ln[1:]))
-        if not os.path.isdir(thisPath):
+        thisPath = Path(path) if len(ln) < 2 else Path(" ".join(ln[1:]))
+        if not isdir(thisPath):
             return (-1, "not a directory: " + str(newPath))
         
         listing = sorted(os.listdir(thisPath))
@@ -67,15 +69,15 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
 
         for p in listing:
             # type
-            d = os.path.isdir(p)
+            d = isdir(p)
             print((
                 Fore.LIGHTCYAN_EX + "Dir" if d
                 else Fore.LIGHTRED_EX + "File") + "\t", end=Style.RESET_ALL)
             # size
-            size = os.path.getsize(p)
+            size = getsize(p)
             print(lsFileSize(size), end="\t")
             # last modified
-            lastmod = datetime.fromtimestamp(os.path.getmtime(p))
+            lastmod = datetime.fromtimestamp(getmtime(p))
             print(f"D{(lastmod.year % 100):02}{lastmod.month:02}{lastmod.day:02}", end="\t") # date YYMMDD
             print(f"T{lastmod.hour:02}{lastmod.minute:02}{lastmod.second:02}", end="\t") # time HHMMSS
             # name
