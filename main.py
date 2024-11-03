@@ -18,7 +18,15 @@ defaultConfig: dict[str, dict[str]] = {
         "separator": ">"
     },
     "misc": {
-        "showAboutOnStart": True
+        "startupCommands": ["about --primitive"]
+    },
+    "colors": {
+        "aboutBG": "LIGHTGREEN_EX",
+        "aboutFG": "BLACK",
+        "lsDir": "LIGHTCYAN_EX",
+        "lsFile": "LIGHTRED_EX",
+        "user": "LIGHTYELLOW_EX",
+        "path": "BLUE",
     }
 }
 path = os.getcwd()
@@ -32,19 +40,19 @@ def lsFileSize(n: int):
         n2 /= 1000
     return str(round(n2)) + prefix # it's gotta eventually stop
 
-# typing Back.LIGHTGREEN_EX + Fore.BLACK + <string> + Style.RESET_ALL over and
-# over eventually bores you, doesn't it?
-def aboutPrint(s, end="\n"):
-    print(Back.LIGHTGREEN_EX + Fore.BLACK + s + Style.RESET_ALL, end=end)
+def aboutPrint(s, config={}, end="\n"):
+    print(
+        getattr(Back, getConfig(config, "colors", "aboutBG"))
+        + getattr(Fore, getConfig(config, "colors", "aboutFG"))
+        + s + Style.RESET_ALL, end=end)
 
-def cmd(ln: list[str]) -> tuple[int, str | None]:
+def cmd(ln: list[str], config) -> tuple[int, str | None]:
     if ln[0] == "about":
-        aboutPrint("expl version 0.11")
+        aboutPrint("expl version 0.11", config)
         if ln.__contains__("--primitive"): return (0, None)
-        aboutPrint("(c) 2024 Matto58, licensed under the MIT license")
-        aboutPrint("report issues/contribute at https://github.com/Matto58/explshell")
-        aboutPrint("thanks for using my silly little shell! <3")
-
+        aboutPrint("(c) 2024 Matto58, licensed under the MIT license", config)
+        aboutPrint("report issues/contribute at https://github.com/Matto58/explshell", config)
+        aboutPrint("thanks for using my silly little shell! <3", config)
     elif ln[0] == "clear":
         # https://stackoverflow.com/a/50560686
         print("\033[H\033[J", end="")
@@ -62,9 +70,11 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
         if len(ln) < 2:
             print(path)
             return (0, None)
+        
         pathL = Path(path)
         pathR = Path(" ".join(ln[1:]))
         newPath = Path(pathL / pathR)
+
         if not isdir(newPath):
             return (-1, "path not found: " + str(newPath))
         path = str(newPath.expanduser().resolve())
@@ -78,12 +88,14 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
         print(Back.LIGHTWHITE_EX + Fore.BLACK + "Type\tSize\tLast modified\tName")
         print(Style.RESET_ALL, end = "")
 
+        dirColor = getattr(Fore, getConfig(config, "colors", "lsDir"))
+        flColor = getattr(Fore, getConfig(config, "colors", "lsFile"))
         for p in listing:
             # type
             d = isdir(p)
             print((
-                Fore.LIGHTCYAN_EX + "Dir" if d
-                else Fore.LIGHTRED_EX + "File") + "\t", end=Style.RESET_ALL)
+                dirColor + "Dir" if d
+                else flColor + "File") + "\t", end=Style.RESET_ALL)
             # size
             size = getsize(p)
             print(lsFileSize(size), end="\t")
@@ -92,7 +104,7 @@ def cmd(ln: list[str]) -> tuple[int, str | None]:
             print(f"D{(lastmod.year % 100):02}{lastmod.month:02}{lastmod.day:02}", end="\t") # date YYMMDD
             print(f"T{lastmod.hour:02}{lastmod.minute:02}{lastmod.second:02}", end="\t") # time HHMMSS
             # name
-            print((Fore.LIGHTCYAN_EX if d else Fore.LIGHTRED_EX) + p + Style.RESET_ALL)
+            print((dirColor if d else flColor) + p + Style.RESET_ALL)
 
     else:
         return (-1, "unknown command: " + ln[0])
@@ -115,7 +127,8 @@ def getConfig(config, category, key):
 
 def main():
     config = loadConfig()
-    if getConfig(config, "misc", "showAboutOnStart"): cmd(["about", "--primitive"])
+    for command in getConfig(config, "misc", "startupCommands"):
+        cmd(command.split(" "), config)
     exitCode = None
     while True:
         if getConfig(config, "prompt", "showPrevCmdExitCode"):
@@ -141,7 +154,7 @@ def main():
         if len(ln) == 0: continue
         if ln[0] == "exit": return
 
-        (exitCode, errMsg) = cmd(ln)
+        (exitCode, errMsg) = cmd(ln, config)
         if errMsg: print(Fore.RED + "error: " + Style.BRIGHT + errMsg + Style.RESET_ALL)
 
 
