@@ -8,7 +8,7 @@ from getpass import getuser
 from socket import gethostname
 from datetime import datetime
 from pathlib import Path
-from os.path import isdir, getsize, getmtime
+from os.path import isdir, isfile, getsize, getmtime
 
 defaultConfig: dict[str, dict[str]] = {
     "prompt": {
@@ -92,6 +92,8 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
         dirColor = getattr(Fore, getConfig(config, "colors", "lsDir"))
         flColor = getattr(Fore, getConfig(config, "colors", "lsFile"))
         for p in listing:
+            p = Path(thisPath) / p
+            if not isdir(p) and not isfile(p): continue # skip symlinks
             # type
             d = isdir(p)
             print((
@@ -99,13 +101,13 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
                 else flColor + "File") + "\t", end=Style.RESET_ALL)
             # size
             size = getsize(p)
-            print(lsFileSize(size), end="\t")
+            print("" if d else lsFileSize(size), end="\t")
             # last modified
             lastmod = datetime.fromtimestamp(getmtime(p))
             print(f"D{(lastmod.year % 100):02}{lastmod.month:02}{lastmod.day:02}", end="\t") # date YYMMDD
             print(f"T{lastmod.hour:02}{lastmod.minute:02}{lastmod.second:02}", end="\t") # time HHMMSS
             # name
-            print((dirColor if d else flColor) + p + Style.RESET_ALL)
+            print((dirColor if d else flColor) + p.name + Style.RESET_ALL)
 
     else:
         try:
