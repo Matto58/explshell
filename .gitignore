@@ -1,3 +1,4 @@
 # gitignore for the expl shell
 
 config.yaml
+__pycache__

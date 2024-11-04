@@ -9,6 +9,8 @@ from socket import gethostname
 from datetime import datetime
 from pathlib import Path
 from os.path import isdir, isfile, getsize, getmtime
+from shutil import copytree
+from i18n import loadTranslation
 
 defaultConfig: dict[str, dict[str]] = {
     "prompt": {
@@ -18,7 +20,8 @@ defaultConfig: dict[str, dict[str]] = {
         "separator": ">"
     },
     "misc": {
-        "startupCommands": ["about --primitive"]
+        "startupCommands": ["about --primitive"],
+        "language": "en"
     },
     "colors": {
         "aboutBG": "LIGHTGREEN_EX",
@@ -30,6 +33,10 @@ defaultConfig: dict[str, dict[str]] = {
     }
 }
 CONFIG_PATH = Path("~/.expl/config.yaml").expanduser()
+VERSION = "0.20"
+YEARS = "2024"
+AUTHOR = "Matto58"
+REPO_URL = "https://github.com/Matto58/explshell"
 path = os.getcwd()
 
 def lsFileSize(n: int):
@@ -49,23 +56,26 @@ def aboutPrint(s, config={}, end="\n"):
 
 def cmd(ln: list[str], config) -> tuple[int, str | None]:
     if ln[0] == "about":
-        aboutPrint("expl version 0.20", config)
+        aboutText = i18n["about"].split("\n")
+        aboutPrint(f"{aboutText[0]} {VERSION}", config)
         if ln.__contains__("--primitive"): return (0, None)
-        aboutPrint("(c) 2024 Matto58, licensed under the MIT license", config)
-        aboutPrint("report issues/contribute at https://github.com/Matto58/explshell", config)
-        aboutPrint("thanks for using my silly little shell! <3", config)
+        aboutPrint("\n".join(aboutText[1:]).format(YEARS, AUTHOR, REPO_URL), config)
+
     elif ln[0] == "clear":
         # https://stackoverflow.com/a/50560686
         print("\033[H\033[J", end="")
+
     elif ln[0] == "echo":
         print(" ".join(ln[1:]))
+
     elif ln[0] == "err":
         if len(ln) < 2:
-            return (-1, "missing error code parameter")
+            return (-1, i18n["errMissingErrCode"])
         try:
             return (int(ln[1]), " ".join(ln[2:]) if len(ln) > 2 else None)
         except ValueError:
-            return (-1, "invalid error code")
+            return (-1, i18n["errInvalidErrCode"])
+        
     elif ln[0] == "cd":
         global path
         if len(ln) < 2:
@@ -77,16 +87,17 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
         newPath = Path(pathL / pathR)
 
         if not isdir(newPath):
-            return (-1, "path not found: " + str(newPath))
+            return (-1, i18n["cdPathNotFound"] + str(newPath))
         path = str(newPath.expanduser().resolve())
+
     elif ln[0] == "ls":
         thisPath = Path(path) if len(ln) < 2 else Path(" ".join(ln[1:]))
         if not isdir(thisPath):
-            return (-1, "not a directory: " + str(newPath))
+            return (-1, i18n["lsNotADir"] + str(newPath))
         
         listing = sorted(os.listdir(thisPath))
         # header
-        print(Back.LIGHTWHITE_EX + Fore.BLACK + "Type\tSize\tLast modified\tName")
+        print(Back.LIGHTWHITE_EX + Fore.BLACK + i18n["lsHeader"])
         print(Style.RESET_ALL, end = "")
 
         dirColor = getattr(Fore, getConfig(config, "colors", "lsDir"))
@@ -97,8 +108,8 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
             # type
             d = isdir(p)
             print((
-                dirColor + "Dir" if d
-                else flColor + "File") + "\t", end=Style.RESET_ALL)
+                dirColor + i18n["lsDir"] if d
+                else flColor + i18n["lsFile"]) + "\t", end=Style.RESET_ALL)
             # size
             size = getsize(p)
             print("" if d else lsFileSize(size), end="\t")
@@ -114,7 +125,8 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
             process = subprocess.run(ln, stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr)
             return (process.returncode, None)
         except FileNotFoundError:
-            return (-1, "unknown command: " + ln[0])
+            return (-1, i18n["unknownCmd"] + ln[0])
+
     return (0, None)
 
 def loadConfig():
@@ -135,9 +147,25 @@ def getConfig(config, category, key):
     return config.get(category, defaultConfig[category]).get(key, defaultConfig[category][key])
 
 def main():
+    i18nLoc = Path("~/.expl/i18n").expanduser()
+    if not isdir(i18nLoc):
+        if not isdir("i18n"):
+            print("please, for your first run, run the shell with the i18n folder in the same folder as the main file")
+            return
+        copytree("i18n", i18nLoc)
+
     config = loadConfig()
+    langCode = getConfig(config, "misc", "language")
+    
+    global i18n
+    i18n = loadTranslation(langCode)
+    if i18n == None: # ruh roh
+        print("could not load translation for " + langCode)
+        return
+
     for command in getConfig(config, "misc", "startupCommands"):
         cmd(command.split(" "), config)
+
     exitCode = None
     while True:
         if getConfig(config, "prompt", "showPrevCmdExitCode"):
@@ -164,7 +192,7 @@ def main():
         if ln[0] == "exit": return
 
         (exitCode, errMsg) = cmd(ln, config)
-        if errMsg: print(Fore.RED + "error: " + Style.BRIGHT + errMsg + Style.RESET_ALL)
+        if errMsg: print(Fore.RED + i18n["error"] + Style.BRIGHT + errMsg + Style.RESET_ALL)
 
 
 if __name__ == "__main__": main()
