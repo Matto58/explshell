@@ -1,4 +1,4 @@
-about: "expl verze\n(c) {} {}, licensováno pod MIT licencí\nnahlaš chyby/přispěj na {}\ndík, že používáš můj malý hloupý shell! <3"
+about: "expl verze\n(c) {} {}, licencováno pod MIT licencí\nnahlaš chyby/přispěj na {}\ndík, že používáš můj malý hloupý shell! <3"
 errMissingErrCode: "chybí parametr chybového kódu"
 errInvalidErrCode: "neplatná hodnota chybového kódu"
 cdPathNotFound: "cesta nenalezena: "
