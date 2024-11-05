@@ -14,7 +14,7 @@ from shutil import copytree
 from i18n import loadTranslation
 from config import loadConfig, getConfig
 
-VERSION = "0.20"
+VERSION = "0.21"
 YEARS = "2024"
 AUTHOR = "Matto58"
 REPO_URL = "https://github.com/Matto58/explshell"
@@ -103,7 +103,7 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
 
     else:
         try:
-            process = subprocess.run(ln, stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr)
+            process = subprocess.run(ln, stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr, cwd=str(path))
             return (process.returncode, None)
         except FileNotFoundError:
             return (-1, i18n["unknownCmd"] + ln[0])
