@@ -1,6 +1,6 @@
 expl
 ----
-an experimental shell written in python. tested with python 3.13 and 3.11. the
+an experimental shell written in python. tested with python 3.11-3.13. the
 name is an inside joke, refers to the exploding head emoji on discord being
 typeable by typing :expl and pressing tab
 
@@ -21,3 +21,14 @@ command list: [required] (optional)
   - exits expl
 - ls (path...)
   - lists the contents of the specified directory or the current one
+
+useful information:
+- configuration is located at ~/.expl/config.yaml
+- if anything goes wrong, keep in mind this shell is wip
+  - when reporting your issue, be descriptive, yet respectful
+    - good example: "hi matto this x feature broke and this is the output"
+    - bad example: "you dogshit dev this shit broke and i will not show output"
+- please don't make prs the size of the whole andromeda galaxy! adding features
+  should not really require a whole rewrite of the code base!
+  - (unless they do, in which case, well, good luck with getting your feature
+    added)
