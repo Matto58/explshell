@@ -107,6 +107,8 @@ def cmd(ln: list[str], config) -> tuple[int, str | None]:
             return (process.returncode, None)
         except FileNotFoundError:
             return (-1, i18n["unknownCmd"] + ln[0])
+        except KeyboardInterrupt:
+            return (-1, None)
 
     return (0, None)
 
@@ -150,7 +152,11 @@ def main():
                 end = Style.RESET_ALL
             )
 
-        line = input(getConfig(config, "prompt", "separator"))
+        try:
+            line = input(getConfig(config, "prompt", "separator"))
+        except KeyboardInterrupt:
+            print()
+            continue
         ln = line.strip().split(" ")
         if len(ln) == 0: continue
         if ln[0] == "exit": return
